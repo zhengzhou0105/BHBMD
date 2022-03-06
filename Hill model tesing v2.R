@@ -101,7 +101,7 @@ inits <- list(
   list(c = 1, g = 2)
 )
 
-# *Testing---------
+# *Hill Testing---------
 # stan sampling and save samples in a Rdata file
 stanfit <- get_metaStanfit(modelname = modelname,
                        df_input = df_input,
@@ -234,7 +234,6 @@ stanfit_bladder_meta_Hill_CT_gUnif_dADD <- stan(model_code = modelstring_Hill_me
                                                 thin = 1)
 
 
-# Apply Validated model on data----
 #* Hill all data----
 
 modelname <- "Hill_meta_Shao_fd_old_ver2"
@@ -311,9 +310,9 @@ df_BMD <- getBMD_meta_Hill(BMR,Ref,
                            df_input = df_input)
 #* Linear all data------
 
-modelname <- "Linear_meta"
-dataName <- "bladderAll"
-df_input <- bladder_meta_all
+modelname <- "Linear_meta_fun_vec_rag"
+dataName <- "meta"
+df_input <- df_bladder_meta
 
 # stan sampling and save samples in a Rdata file
 assign("stanfit",
@@ -335,11 +334,13 @@ summary(df_posteriors[,c("a","b")])
 
 # display study specific curves
 showcurve_specific_Linear(df_posteriors = df_posteriors,
-                        df_input = df_input)
+                        df_input = df_input,
+                        aname = "a", bname = "b")
 
 # overarching median curve
 showcurve_overarching_Linear(df_posteriors = df_posteriors,
-                           df_input = df_input)
+                           df_input = df_input,
+                           aname = "a" , bname = "b")
 
 # BMD estimation
 

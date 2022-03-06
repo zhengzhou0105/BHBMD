@@ -388,7 +388,16 @@ get_metaStanfit <- function(modelname,df_input,dataName,inits = NULL){
   
   # Priors
   
-  # Vectorized function declaration
+  # Linear - Vectorized function declaration 
+  prior_Linear_meta_fun_vec_rag <- list(
+    prior_sigma = c(0,5),
+    prior_mu_a = c(-1,1),
+    prior_sigma_a = c(0,2),
+    prior_mu_b = c(-3,3),
+    prior_sigma_b = c(0,2)
+  )
+  
+  # Hill- Vectorized function declaration
   prior_Hill_meta_fun_vec_rag <- list(
     prior_sigma = c(0,5),
     prior_mu_a = c(-1,1),
@@ -653,6 +662,7 @@ get_metaStanfit <- function(modelname,df_input,dataName,inits = NULL){
   
   # Compile stanmodels
   assign(paste0("model_",modelname), 
+         # stan_model(file = paste0("stanmodel_",modelname,".stan"))
          stan_model(model_code = eval(parse(text = paste0("modelstring_",modelname))))
   )
 
@@ -1131,3 +1141,314 @@ showcurve_overarching_Hill <- function(df_posteriors,df_input,
     dev.off()
 }
 
+# show study-specific curves for Hill partial hierarchical model
+showcurve_specific_Linear <- function(df_posteriors,df_input,
+                                    aname,bname,
+                                    xup = NULL, yup = NULL){
+  # curves as xy plot
+  doselow <- 0
+  dosehigh <- ceiling(max(df_input$dose))
+  # doselow and dosehigh are theoretical range of doses to be as wide as possible
+  xdose <- seq(from = doselow, to = dosehigh, length.out = 1E3)
+  # convert xaxis coordinates because parameters were fitted on standarized dose
+  mindose <- min(df_input$dose)
+  maxdose <- max(df_input$dose)
+  dosed <- (xdose - mindose) / (maxdose - mindose)
+  # dosed[dosed < 0] <- 0
+  
+  # Use original or transformed dose
+  # doseinput <- dosed
+  doseinput <- xdose
+  
+  # get a blank plot base
+  graphics.off()
+  myplotbase <- ggplot(data.frame())+ geom_blank()+
+    theme_classic(base_size = 30)
+  
+  NStudy <- length(unique(df_input$Index))          # number of studies
+  iterEff <- nrow(df_posteriors)
+  a_specific <- numeric(iterEff)
+  b_specific <- a_specific
+  y_specific <- matrix(NA, nrow = iterEff,ncol = length(xdose))
+  
+  # number of dose group in each study
+  G <- as.integer(table(df_input$Index))
+  
+  for(s in 1:NStudy){
+    
+    # calculate study specific y
+    a_specific <- df_posteriors[,paste0(aname,"[",s,"]")]
+    b_specific <- df_posteriors[,paste0(bname,"[",s,"]")]
+    
+    # Two ways of plotting
+    
+    # # Method 1: dose ~ median of iterative RR by all parameters
+    # # each iter of pars fits a distribution of y then take descriptives
+    # # y_specific is the dataframe of y based on study-specific parameters with simulation
+    # for(i in 1:iterEff){
+    #   # input dosed is standardized
+    #   # y_specific[i,] <- get_Hill(doseinput,a = a_specific[i], b = b_specific[i],
+    #   #                            c = c[i], g = g[i])
+    #   y_specific[i,] <- get_Linear(doseinput, a = a_specific[i], b = b_specific[i])
+    # }
+    # 
+    # # summary data
+    # df_plot <- data.frame(x = xdose,
+    #                       # curve of median/median/quantiles
+    #                       median = apply(y_specific,MARGIN =  2,
+    #                                      FUN= function(x) median(x,
+    #                                                              na.rm = T)),
+    #                       mean = apply(y_specific,MARGIN =  2,
+    #                                    FUN= function(x) mean(x,
+    #                                                          na.rm = T)),
+    #                       Q5 = apply(y_specific,MARGIN =  2,
+    #                                  FUN= function(x) quantile(x,0.05,
+    #                                                            na.rm = T)),
+    #                       Q95 = apply(y_specific,MARGIN =  2,
+    #                                   FUN= function(x) quantile(x,0.95,
+    #                                                             na.rm = T)),
+    #                       Q25 = apply(y_specific,MARGIN = 2,
+    #                                   FUN = function(x) quantile(x,0.25,
+    #                                                              na.rm = T)),
+    #                       Q75 = apply(y_specific,MARGIN = 2,
+    #                                   FUN = function(x) quantile(x,0.75,
+    #                                                              na.rm = T))
+    # )
+    
+    # Method 2: dose ~ RR by median parameters
+    y_median <- get_Linear(doseinput, a = median(a_specific),b = median(b_specific))
+    y_p5 <- get_Linear(doseinput, a = quantile(a_specific,0.05),b = quantile(b_specific,0.05))
+    y_p95 <- get_Linear(doseinput, a = quantile(a_specific,0.95),b = quantile(b_specific,0.95))
+    df_plot <- data.frame(
+      x = xdose,
+      # curve of median/5 and 95th percentiles
+      median = y_median, Q5 = y_p5, Q95 = y_p95
+    )
+    df_temp <- df_input %>% group_by(Study) %>% mutate(
+      GID = row_number()
+    ) %>% filter(GID != 1)
+    df_temp <- df_input
+    
+    Dose = df_temp$dose[(sum(G[1:s-1])+1):sum(G[1:s])]
+    RR = df_temp$RR[(sum(G[1:s-1])+1):sum(G[1:s])]
+    RR.l = df_temp$RR.l[(sum(G[1:s-1])+1):sum(G[1:s])]
+    RR.u = df_temp$RR.u[(sum(G[1:s-1])+1):sum(G[1:s])]
+    
+    # data points of each study
+    df_rawdata <- data.frame(
+      Dose = Dose,
+      RR.l = RR.l,
+      RR.u = RR.u,
+      RR = RR
+    )
+    df_rawdata$RR.l[is.na(df_rawdata$RR.l)] <- df_rawdata$RR
+    df_rawdata$RR.u[is.na(df_rawdata$RR.u)] <- df_rawdata$RR
+    
+    Reference <- df_input$Study[(sum(G[1:s-1])+1)]
+    xupper <- ifelse(is.null(xup),
+                     ceiling(min(
+                       max(Dose)*1.1, 
+                       max(Dose)+1
+                     )
+                     ),
+                     xup
+    )
+    
+    yupper <- ifelse(is.null(yup),
+                     ceiling (min(
+                       max(RR.u,na.rm = T)*1.1,
+                       max(RR.u,na.rm = T)+1
+                     )
+                     ),
+                     yup)
+    plot_specific_summary <- myplotbase+
+      # title to display reference
+      labs(title = paste0("study #",s," ",Reference),
+           x = "ADD(ug/kg/D)",
+           y = "RR")+
+      # median curve
+      geom_line(data = df_plot,
+                aes(x = x , y = median),
+                color = "blue", size = 1)+
+      # # # mean curve
+      # geom_line(data = df_plot,
+      #   aes(x = x , y = mean),
+      #           color = "red", size = 2)+
+      # 5% curve
+      geom_line(data = df_plot,
+                aes(x = x , y = Q5),
+                color = "green", size = 1,linetype ="dotted")+
+      # 95% curve
+      geom_line(data = df_plot,
+                aes(x = x , y = Q95),
+                color = "red", size = 1,linetype ="dotted")+
+      # # 25% curve
+      # geom_line(data = df_plot,
+      #   aes(x = x , y = Q25),
+      #           color = "green", size = 0.8,linetype ="dotted")+
+      # # 75% curve
+      # geom_line(data = df_plot,
+      #   aes(x = x , y = Q75),
+      #           color = "red", size = 0.8,linetype ="dotted")+
+      # data points median
+      geom_point(data = df_rawdata,
+                 aes(x = Dose,y = RR),
+                 size = 5, color = s)+
+      # upper and lower bound of RR
+      geom_segment(data = df_rawdata,
+                   aes(x = Dose,xend = Dose,
+                       y = RR.l,yend = RR.u),
+                   size = 1, color= s)+
+      # set axis coordinates bound
+      coord_cartesian(xlim = c(0,xupper),
+                      ylim = c(0,yupper))+
+      scale_x_continuous(breaks = seq(from = 0, to = xupper,by = xupper/10))+
+      scale_y_continuous(breaks = seq(from = 0, to = yupper,by = yupper/10))
+    
+    # create figs
+    # dev.new("windows",noRStudioGD = T)
+    # save as svg
+    svg(filename = paste0("study #",s," ",Reference,".svg"),
+        width = 10,height = 10)
+    print(
+      plot_specific_summary
+    )
+    dev.off()
+  }
+}
+
+showcurve_overarching_Linear <- function(df_posteriors,df_input,
+                                       aname,bname,
+                                       xup = NULL, yup = NULL){
+  doselow <- 0
+  dosehigh <- ceiling(max(df_input$dose))
+  xdose <- seq(from = doselow, to = dosehigh, length.out = 1E3)
+  # convert xaxis coordinates
+  mindose <- min(df_input$dose)
+  maxdose <- max(df_input$dose)
+  dosed <- (xdose - mindose) / (maxdose - mindose)
+  # dosed[dosed < 0] <- 0
+  
+  # Use original or transformed dose 
+  # doseinput <- dosed
+  doseinput <- xdose
+  
+  NStudy <- length(unique(df_input$Index))          # number of studies
+  a <- df_posteriors[,aname]
+  b <- df_posteriors[,bname]
+
+  # # plotting method 1: dose ~ median of iterative RR by all parameters
+  # y_overarching <- matrix(NA, nrow = iterEff,ncol = length(xdose))
+  # 
+  # # each iter of pars fits a distribution of y then take descriptives
+  # for(i in 1:iterEff){
+  #   y_overarching[i,] <- get_Linear(doseinput,a[i],b[i])
+  # }
+  # 
+  # df_plot <- data.frame(x = xdose,
+  #                       median = apply(y_overarching,MARGIN =  2,
+  #                                      FUN= function(x) median(x,
+  #                                                              na.rm = T)),
+  #                       mean = apply(y_overarching,MARGIN =  2,
+  #                                    FUN= function(x) mean(x,
+  #                                                          na.rm = T)),
+  #                       Q5 = apply(y_overarching,MARGIN =  2,
+  #                                  FUN= function(x) quantile(x,0.05,
+  #                                                            na.rm = T)),
+  #                       Q95 = apply(y_overarching,MARGIN =  2,
+  #                                   FUN= function(x) quantile(x,0.95,
+  #                                                             na.rm = T)),
+  #                       Q25 = apply(y_overarching,MARGIN =  2,
+  #                                   FUN= function(x) quantile(x,0.25,
+  #                                                             na.rm = T)),
+  #                       Q75 = apply(y_overarching,MARGIN =  2,
+  #                                   FUN= function(x) quantile(x,0.75,
+  #                                                             na.rm = T))
+  # )
+  
+  # # Plotting method 2: dose ~ RR by median parameters
+  y_median <- get_Linear(doseinput,a = median(a), b = median(b))
+  y_p5 <- get_Linear(x = doseinput, a = quantile(a,0.05), b = quantile(b, 0.05))
+  y_p95 <- get_Linear(x = doseinput, a = quantile(a,0.95), b = quantile(b, 0.95))
+  y_p25 <- get_Linear(x = doseinput, a = quantile(a,0.25), b = quantile(b, 0.25))
+  y_p75 <- get_Linear(x = doseinput, a = quantile(a,0.75), b = quantile(b, 0.75))
+  df_plot <- data.frame(x = xdose,
+                        median = y_median,Q5 = y_p5,Q95 = y_p95,
+                        Q25 = y_p25,Q75 = y_p75)
+  
+  df_input$RR.l[is.na(df_input$RR.l)] <- 1
+  df_input$RR.u[is.na(df_input$RR.u)] <- 1
+  
+  xupper <- ifelse(is.null(xup),
+                   ceiling (max(
+                     median(df_input$dose)*1.1,
+                     median(df_input$dose) + 1
+                   )),
+                   xup
+  )
+  
+  yupper <- ifelse(is.null(yup),
+                   ceiling(
+                     min(
+                       max(df_input$RR.u,na.rm = T)*1.1,
+                       max(df_input$RR.u,na.rm = T) +1
+                     )
+                   ),
+                   yup)
+  graphics.off()
+  myplotbase <- ggplot(data.frame())+ geom_blank()+
+    theme_classic(base_size = 30)
+  
+  plotcurves <- myplotbase+
+    # title to display reference
+    labs(title = "Overarching Curve",
+         x = "ADD(ug/kg/D)",
+         y = "RR")+
+    # median curve
+    geom_line(data = df_plot,
+              aes(x = x , y = median),
+              color = "blue", size = 2)+
+    # # mean curve
+    # geom_line(data = df_plot,
+    #           aes(x = x , y = mean),
+    #           color = "red", size = 2)+
+  # # 5% curve
+  # geom_line(data = df_plot,
+  #           aes(x = x , y = Q5),
+  #           color = "grey", size = 0.8,linetype ="dotted")+
+  # # 95% curve
+  # geom_line(data = df_plot,
+  #           aes(x = x , y = Q95),
+  #           color = "grey", size = 0.8,linetype ="dotted")+
+  # 25% curve
+  geom_line(data = df_plot,
+            aes(x = x , y = Q25),
+            color = "brown", size = 0.8,linetype ="dotted")+
+    # 75% curve
+    geom_line(data = df_plot,
+              aes(x = x , y = Q75),
+              color = "brown", size = 0.8,linetype ="dotted")+
+    # data points
+    geom_point(data = df_input,
+               aes(x = dose,y = RR, group = Study,
+                   color = Study, shape = Study),
+               size = 5)+
+    geom_segment(data = df_input,
+                 aes(x = dose,xend = dose,
+                     y = RR.l,yend = RR.u,
+                     group = Study, color = Study),
+                 size = 1)+
+    # set axis coordinates bound
+    coord_cartesian(xlim = c(0,xupper),
+                    ylim = c(0,yupper))+
+    scale_x_continuous(breaks = seq(from = 0, to = xupper,by = xupper/10))+
+    scale_y_continuous(breaks = seq(from = 0, to = yupper,by = yupper/10))
+  
+  
+  svg(filename = "Overarching curve.svg",
+      width = 10,height = 10)
+  suppressWarnings(
+    print(plotcurves)
+  )
+  dev.off()
+}

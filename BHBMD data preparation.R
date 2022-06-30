@@ -5,7 +5,7 @@ warmup <- 0.5
 Nchain <- 3
 thin <- 1
 
-source("Hierarchical model utilities.R")
+source("BHBMD model utilities.R")
 
 # Input Raw Data-----
 
@@ -25,7 +25,7 @@ df_raw_bladder_meta <- df_raw_bladder_meta %>% mutate(
   ysdL = ifelse(is.nan(ysdL),0,ysdL)
 )
 df_bladder_meta <- RRDataUnify(df_raw = df_raw_bladder_meta,
-                               Index = "ï..Index",Study = "Study",N = "N",
+                               Index = "?..Index",Study = "Study",N = "N",
                                dose = "ADD.Total_ug.kg.D",
                                RR = "RR",ysdL = "ysdL",
                                RRlower = "RR.l",RRupper = "RR.u")
@@ -81,7 +81,7 @@ df_raw_bladder_cc <- df_raw_bladder_cc %>% mutate(
   ysdL = ifelse(is.nan(ysdL),0,ysdL)
 )
 df_bladder_meta_cc <- RRDataUnify(df_raw = df_raw_bladder_cc,
-                               Index = "ï..Index",Study = "Study",N = "N",
+                               Index = "?..Index",Study = "Study",N = "N",
                                dose = "ADD.Total_ug.kg.D",
                                RR = "RR",ysdL = "ysdL",
                              RRlower = "RR.l",RRupper = "RR.u"

@@ -403,18 +403,7 @@ get_metaStanfit <- function(modelname,df_input,dataName,inits = NULL){
   )
   
   # Hill- Vectorized function declaration
-  prior_Hill_meta_fun_vec_rag <- list(
-    prior_sigma = c(0,5),
-    prior_mu_a = c(-1,1),
-    prior_sigma_a = c(0,2),
-    prior_mu_b = c(-3,3),
-    prior_sigma_b = c(0,2),
-    prior_c = c(0,10),
-    prior_g = c(0,50),
-    g_constr = c(0)
-  )
-  
-  prior_Hill_meta_fun_vec_rag_test <- list(
+  prior_Hill_meta_rag_loglik <- list(
     prior_sigma = c(0,5),
     prior_mu_a = c(-1,1),
     prior_sigma_a = c(0,2),
@@ -497,7 +486,7 @@ get_metaStanfit <- function(modelname,df_input,dataName,inits = NULL){
   # )
 
   
-    DataList <- append(dataAll,
+  DataList <- append(dataAll,
                      eval(parse(text = paste0("prior_",
                                               modelname)))
                      )
@@ -544,6 +533,9 @@ get_fitsummary <- function(stanfit){
   # write.csv(summary,file = "posterior summary.csv")
   # modelname <- substr(deparse(substitute(stanfit)),9,100)
   df_posteriors <- as.data.frame(stanfit)
+  write.csv(df_posteriors,
+            row.names = F,
+            file = paste0("Posteriors_",modelname,"_",dataName,".csv"))
   return(df_posteriors)
 }
 
@@ -664,7 +656,67 @@ getBMD_meta_Hill <- function(BMR,refdose,df_posteriors,df_input){
   return(df_BMD)
 }
 
+# Model Evaluation-------
 
+
+getAIC <- function(log_lik,pars){
+  dev <- apply(log_lik,c(1,2),sum)
+  AIC <- -2 * pars + 2 * dev
+  AIC_mean <- mean(AIC)
+  return(AIC_mean)
+}
+
+getBIC <- function(log_lik,pars){
+  dev <- apply(log_lik,c(1,2),sum)
+  BIC <- - pars * log(dim(log_lik_1)[3]) + 2 * dev
+  BIC_mean <- mean(BIC)
+  return(BIC_mean)
+}
+
+getwts <- function(fitList){
+  # modnames <- if(is.null(names(fitList))){NULL} else {names(fitList)}
+  Nmod <- length(fitList)
+  # Npars <- lapply(fitList,FUN = function(x) length(rstan::extract(x))-3);Npars
+  Npars <- lapply(fitList,get_num_upars)
+  log_lik_ls <- lapply(fitList,FUN = function(x) extract_log_lik(x,parameter_name = "log_lik",merge_chains = F))
+  AIC_list <- vector("list",Nmod)
+  BIC_list <- vector("list",Nmod)
+  WAIC_list <- vector("list",Nmod)
+  WAICValue_list <- vector("list",Nmod)
+  loo_list <- vector("list",Nmod)
+  loo_points_mtx <- matrix(NA,nrow = dim(log_lik_ls[[1]])[3],ncol = Nmod)
+  
+  for(i in 1:Nmod){
+    AIC_list[[i]] <- getAIC(log_lik = log_lik_ls[[i]],pars = Npars[[i]])
+    BIC_list[[i]] <- getBIC(log_lik_ls[[i]],Npars[[i]])
+    WAIC_list[[i]] <- waic(log_lik_ls[[i]])
+    WAICValue_list[[i]] <- WAIC_list[[i]]$estimates["elpd_waic",1]
+    loo_list[[i]] <- loo(log_lik_ls[[i]],r_eff = relative_eff(exp(log_lik_ls[[i]])))
+    loo_points_mtx[,i] <- loo_list[[i]]$pointwise[,"elpd_loo"]
+  }
+  
+  AIC_wts <- exp(unlist(AIC_list))/sum(exp(unlist(AIC_list)));AIC_wts
+  BIC_wts <- exp(unlist(BIC_list))/sum(exp(unlist(BIC_list)));BIC_wts
+  WAIC_wts <- exp(unlist(WAICValue_list))/sum(exp(unlist(WAICValue_list)));WAIC_wts
+  PBMA_wts <- pseudobma_weights(loo_points_mtx,BB=F);PBMA_wts
+  PBMA_wts_BB <- pseudobma_weights(loo_points_mtx,BB=T);PBMA_wts_BB
+  LogStacking_wts <- stacking_weights(loo_points_mtx);LogStacking_wts
+  
+  mtx_compwts <- round(
+    cbind(
+      AIC = AIC_wts,
+      BIC = BIC_wts,
+      WAIC = WAIC_wts,
+      PseudoBMA = PBMA_wts,
+      PseudoBMABB = PBMA_wts_BB,
+      Stacking = LogStacking_wts
+    ),
+    3
+  )
+  return(mtx_compwts)
+}
+
+  
 # Visualization------
 
 # show study-specific curves for Hill partial hierarchical model

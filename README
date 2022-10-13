@@ -1,6 +1,6 @@
-# All script are based on R software.  Operatable under R_4.2.1
-# Rstan is required for Bayesian modeling in BHBMD. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
+All script are based on R software.  Operatable under R_4.2.1
+Rstan is required for Bayesian modeling in BHBMD. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
 
-# Files
-# BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
-# BHBMD_model_testing.R is a high-level wrapper, allowing the automation of bayesian modeling, model averaging and results presentation.
+
+BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
+BHBMD_model_testing.R is a high-level wrapper, allowing the automation of bayesian modeling, model averaging and results presentation.

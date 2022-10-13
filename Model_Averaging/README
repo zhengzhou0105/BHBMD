@@ -1,0 +1,12 @@
+# Evaluate the performance of model averaging performance in hierarchical bayesian benchmark dose modeling
+# Able to handle uncertainties from metadata and model selection simultaneously
+    # Metadata uncertainty- hierarchical structure
+    # Model selection- various model averaging approaches: 
+        # Akaike Information Criteria
+        # Bayesian Model Averaging (Approximated by Bayeisian Information Criteria)
+        # Logarithm of Pseudo Marginal Likelihood
+        # Widely Applicable Information Criteria
+        # Stacking
+        # Pseudo Bayesian Model Averaging
+        # Pseudo Bayesian Model Averaging with Bootstrapping
+# Averaging Performance evaluted by: root squared mean error, absolute mean error and relative deviance

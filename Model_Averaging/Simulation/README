@@ -1,7 +1,9 @@
-# Evaluate the performance of model averaging approaches
-# Using simulated meta-dose-response data
-# To account for uncertainty in data simulation and result dependency on the idiosyncracy on a specific data simulation
-# Integrate a iterative process in data simulation
-# Variation introduced through probabilistic distribution in the simulational parameters of the following variables:
-# Dose, Response, Number of test subjects
-# Iterative results were aggregated for a probabilistic evaluation of performance
+Evaluate the performance of model averaging approaches
+Using simulated meta-dose-response data
+To account for uncertainty in data simulation and result dependency on the idiosyncracy on a specific data simulation
+Integrate a iterative process in data simulation
+Variation introduced through probabilistic distribution in the simulational parameters of the following variables:
+Dose, Response, Number of test subjects
+Iterative results were aggregated for a probabilistic evaluation of performance
+
+The suffix of script denotes the true model from which the data were simulated. For example, in MAS_Linear.R data were simulated with Linear model E(Y)= a+bX as the true model.

@@ -1,5 +1,9 @@
 Dr. Kan Shao from Department of Environmental and Occupational Health at Indiana University Bloomington
 Dr. Roger Zoh from Department of Epidemiology and Biostatistics at Indiana University Bloomington
 
+
+Publications:
+1. Shao K, Zhou Z, Xun P, Cohen SM. 2021. Bayesian benchmark dose analysis for inorganic arsenic in drinking water associated with bladder and lung cancer using epidemiological data. Toxicology:152752.
+
 Rstan scripts for BHBMD modeling
 Must be placed in the same directory with BHBMD_model_utilities.R

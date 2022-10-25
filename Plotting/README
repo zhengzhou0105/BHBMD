@@ -1,0 +1,4 @@
+Functions for plotting the fitted benchmark models   
+Able to fit:
+  * a model based on the overarching parameters
+  * models based on study-specific lower-level parameters

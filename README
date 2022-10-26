@@ -3,3 +3,9 @@ Rstan is required for Bayesian modeling in BHBMD. Check out Rstan homepage: http
 
 
 BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
+
+Folders are organized by components.
+  * Continous: stan model script for fitting continous response data
+  * Model_Averaging: implementation and evaluation of averaging meta hierarchical models
+  * Plotting: visual illustration of BHBMD fits against orginal data points
+  * Priors: the elicitation and specification of BHBMD priors for models included: 1) Continous.

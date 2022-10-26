@@ -6,6 +6,6 @@ BHBMD_model_utilites.R is required for all other scripts in this project. It con
 
 Folders are organized by components.
   * Continous: stan model script for fitting continous response data
+  * Priors: the elicitation and specification of BHBMD priors for models included: 1) Continous.
   * Model_Averaging: implementation and evaluation of averaging meta hierarchical models
   * Plotting: visual illustration of BHBMD fits against orginal data points
-  * Priors: the elicitation and specification of BHBMD priors for models included: 1) Continous.

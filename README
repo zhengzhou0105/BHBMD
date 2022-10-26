@@ -3,4 +3,3 @@ Rstan is required for Bayesian modeling in BHBMD. Check out Rstan homepage: http
 
 
 BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
-BHBMD_plotting.R contains functions for plotting BHBMD results. It can be used independently. When paired with other BHBMD procedures, must be placed in the same directory as BHBMD_model_utilitis.R

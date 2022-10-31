@@ -1,4 +1,5 @@
 All script are based on R software.  Operatable under R_4.2.1
+WHALB is an evolved version of Bayesian hierarchical benchmark dose (BHBMD), integrating model weighting and averaging.    
 Rstan is required for Bayesian modeling in WHALB. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
 
 

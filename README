@@ -1,5 +1,5 @@
 All script are based on R software.  Operatable under R_4.2.1
-Rstan is required for Bayesian modeling in BHBMD. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
+Rstan is required for Bayesian modeling in WHALB. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
 
 
 BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.

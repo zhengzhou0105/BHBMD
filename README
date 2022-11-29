@@ -1,12 +1,17 @@
-All script are based on R software.  Operatable under R_4.2.1
-WHALB is an evolved version of Bayesian hierarchical benchmark dose (BHBMD), integrating model weighting and averaging.    
-Rstan is required for Bayesian modeling in WHALB. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started
+WHALB is a platform for Weighted Hierarchical Bayesian Benchmark Dose. It incorporates model averaging of bayesian hierarchical models for benchmark dose modeling.   
+All script are based on R software.  Operatable under R_4.2.1    
+Rstan is required for Bayesian modeling in WHALB. Check out Rstan homepage: https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started     
 
+For use, please specify at the top of your script the following two directories:
+*mywd:  the working directory where you want all the intermediate and output files to be stored. e.g. mywd = "C:/User/me/Working/"        
+*fileDir: the source directory where R scripts and critical original data to be stored. e.g. fileDir = "C:/User/me/ImportantFiles/"     
+*mywd and fileDir may be specified at the same directory. Both could accomendate HPC directories. Please contact the author for instructions.
 
-BHBMD_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
+WHALB_model_utilites.R is required for all other scripts in this project. It contains basic utility functions. Please make sure all required R packages are installed.
+**WHALB_model_utilities.R must be stored in the fileDir directory**
 
 Folders are organized by components.
   * Continous: stan model script for fitting continous response data
-  * Priors: the elicitation and specification of BHBMD priors for models included: 1) Continous.
+  * Priors: the elicitation and specification of WHALB priors for models included: 1) Continous.
   * Model_Averaging: implementation and evaluation of averaging meta hierarchical models
-  * Plotting: visual illustration of BHBMD fits against orginal data points
+  * Plotting: visual illustration of WHALB fits against orginal data points
